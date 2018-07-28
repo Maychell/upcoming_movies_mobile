@@ -1,5 +1,6 @@
 package com.arctouch.codechallenge.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
@@ -12,6 +13,7 @@ import com.arctouch.codechallenge.base.BaseActivity;
 import com.arctouch.codechallenge.data.Cache;
 import com.arctouch.codechallenge.model.Genre;
 import com.arctouch.codechallenge.model.Movie;
+import com.arctouch.codechallenge.movie_details.MovieDetailsActivity;
 
 import java.util.ArrayList;
 
@@ -19,6 +21,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 public class HomeActivity extends BaseActivity {
+
+    public static final String MOVIE_EXTRA_TAG = "MovieTag";
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -44,7 +48,11 @@ public class HomeActivity extends BaseActivity {
                         }
                     }
 
-                    recyclerView.setAdapter(new HomeAdapter(response.results));
+                    recyclerView.setAdapter(new HomeAdapter(response.results, movie -> {
+                        Intent intent = new Intent(this, MovieDetailsActivity.class);
+                        intent.putExtra(MOVIE_EXTRA_TAG, movie);
+                        startActivity(intent);
+                    }));
                     progressBar.setVisibility(View.GONE);
                 });
     }

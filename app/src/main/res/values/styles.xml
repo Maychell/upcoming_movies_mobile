@@ -6,4 +6,31 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="MovieTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="MovieTitleSize20" parent="MovieTitle">
+        <item name="android:textSize">@dimen/size_20</item>
+    </style>
+
+    <style name="MovieGenre">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:textSize">@dimen/size_14</item>
+    </style>
+
+    <style name="MovieRelease">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/size_12</item>
+        <item name="android:textStyle">italic</item>
+    </style>
+
 </resources>
