@@ -6,7 +6,6 @@ import com.arctouch.codechallenge.model.Genre;
 import com.arctouch.codechallenge.model.Movie;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -15,7 +14,8 @@ public class HomePresenter {
 
     private HomeCallback mView;
     private TmdbApi mApi;
-    private List<Movie> mMovies;
+    private long currentPage = 1;
+    private int totalPages = Integer.MAX_VALUE;
 
     public HomePresenter(HomeCallback homeCallback, TmdbApi api) {
         this.mView = homeCallback;
@@ -23,7 +23,16 @@ public class HomePresenter {
     }
 
     public void loadMovies() {
-        mApi.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, 1L, TmdbApi.DEFAULT_REGION)
+        if (currentPage > totalPages) {
+            return;
+        }
+        fetchMovies();
+        ++currentPage;
+    }
+
+    private void fetchMovies() {
+        mView.setProgressVisibile(true);
+        mApi.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, currentPage, TmdbApi.DEFAULT_REGION)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(response -> {
@@ -35,16 +44,9 @@ public class HomePresenter {
                             }
                         }
                     }
-                    setMovies(response.results);
+                    totalPages = response.totalPages;
+                    mView.setProgressVisibile(false);
+                    mView.feedMovies(response.results);
                 });
-    }
-
-    public ArrayList<Movie> getMovies() {
-        return (ArrayList<Movie>) mMovies;
-    }
-
-    public void setMovies(List<Movie> movies) {
-        mMovies = movies;
-        mView.setAdapter();
     }
 }
