@@ -35,6 +35,7 @@ public class HomeActivity extends AppCompatActivity implements HomeCallback {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_activity);
         DaggerHomeComponent.builder()

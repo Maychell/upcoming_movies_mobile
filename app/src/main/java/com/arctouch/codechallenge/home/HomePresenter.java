@@ -14,7 +14,7 @@ public class HomePresenter {
 
     private HomeCallback mView;
     private TmdbApi mApi;
-    private long currentPage = 1;
+    private long currentPage = 0;
     private int totalPages = Integer.MAX_VALUE;
 
     public HomePresenter(HomeCallback homeCallback, TmdbApi api) {
@@ -23,18 +23,36 @@ public class HomePresenter {
     }
 
     public void loadMovies() {
-        if (currentPage > totalPages) {
+        if (currentPage >= totalPages) {
             return;
         }
-        fetchMovies();
-        ++currentPage;
+        loadGenres();
+    }
+
+    private void loadGenres() {
+        if (!Cache.getGenres().isEmpty()) {
+            fetchMovies();
+            return;
+        }
+        mApi.genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE)
+                .doOnNext((__) -> mView.setProgressVisibile(true))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnEach((__) -> mView.setProgressVisibile(false))
+                .subscribe(response -> {
+                    Cache.setGenres(response.genres);
+                    mView.setProgressVisibile(false);
+                    fetchMovies();
+                });
     }
 
     private void fetchMovies() {
-        mView.setProgressVisibile(true);
-        mApi.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, currentPage, TmdbApi.DEFAULT_REGION)
+        mApi.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, ++currentPage, TmdbApi.DEFAULT_REGION)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext((__) -> mView.setProgressVisibile(true))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnEach((__) -> mView.setProgressVisibile(false))
                 .subscribe(response -> {
                     for (Movie movie : response.results) {
                         movie.genres = new ArrayList<>();
@@ -45,7 +63,6 @@ public class HomePresenter {
                         }
                     }
                     totalPages = response.totalPages;
-                    mView.setProgressVisibile(false);
                     mView.feedMovies(response.results);
                 });
     }
