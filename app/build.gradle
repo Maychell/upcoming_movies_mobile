@@ -17,7 +17,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField 'String', 'TmdbApiKey', tmdb_api_key
+            buildConfigField 'String', 'TmdbApiUrl', tmdb_api_url
+        }
         release {
+            buildConfigField 'String', 'TmdbApiKey', tmdb_api_key
+            buildConfigField 'String', 'TmdbApiUrl', tmdb_api_url
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

@@ -37,23 +37,11 @@ public class HomePresenterTest {
     @Before
     public void setUp() {
         mPresenter = new HomePresenter(mView, api);
-        Mockito.when(api.genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE)).thenReturn(Observable.never());
-        Mockito.when(api.upcomingMovies(Matchers.eq(TmdbApi.API_KEY), Matchers.eq(TmdbApi.DEFAULT_LANGUAGE), Matchers.anyLong(), Matchers.eq(TmdbApi.DEFAULT_REGION)))
-                .thenReturn(Observable.never());
+        Mockito.when(api.getGenres()).thenReturn(Observable.never());
+        Mockito.when(api.getUpcomingMovies(Matchers.anyLong())).thenReturn(Observable.never());
         List<Genre> genres = new ArrayList<>();
         genres.add(new Genre());
         Cache.setGenres(genres);
-    }
-
-    @Test
-    public void whenMoviesAdded() {
-        UpcomingMoviesResponse response = new UpcomingMoviesResponse();
-        List<Movie> mMovies = new ArrayList<>();
-        response.results = mMovies;
-        Mockito.when(api.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, 1L, TmdbApi.DEFAULT_REGION))
-                .thenReturn(Observable.just(response));
-        mPresenter.loadMovies();
-        Mockito.verify(mView, Mockito.times(1)).feedMovies(mMovies);
     }
 
     @Test
@@ -62,8 +50,8 @@ public class HomePresenterTest {
         List<Movie> mMovies = new ArrayList<>();
         response.results = mMovies;
         response.totalPages = 1;
-        Mockito.when(api.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, 1L, TmdbApi.DEFAULT_REGION))
-                .thenReturn(Observable.just(response));
+        Mockito.when(api.getUpcomingMovies(1L)).thenReturn(Observable.just(response));
+        mPresenter.loadMovies();
         mPresenter.loadMovies();
         mPresenter.loadMovies();
         Mockito.verify(mView, Mockito.times(1)).feedMovies(mMovies);
@@ -75,8 +63,7 @@ public class HomePresenterTest {
         List<Movie> mMovies = new ArrayList<>();
         response.results = mMovies;
         response.totalPages = 3;
-        Mockito.when(api.upcomingMovies(Matchers.eq(TmdbApi.API_KEY), Matchers.eq(TmdbApi.DEFAULT_LANGUAGE), Matchers.anyLong(), Matchers.eq(TmdbApi.DEFAULT_REGION)))
-                .thenReturn(Observable.just(response));
+        Mockito.when(api.getUpcomingMovies(Matchers.anyLong())).thenReturn(Observable.just(response));
         mPresenter.loadMovies();
         mPresenter.loadMovies();
         mPresenter.loadMovies();
@@ -87,7 +74,7 @@ public class HomePresenterTest {
     public void whenCachedGenresIsEmpty() {
         Cache.setGenres(new ArrayList<>());
         mPresenter.loadMovies();
-        Mockito.verify(api, Mockito.times(1)).genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE);
+        Mockito.verify(api, Mockito.times(1)).getGenres();
     }
 
     @Test
@@ -96,6 +83,6 @@ public class HomePresenterTest {
         genres.add(new Genre());
         Cache.setGenres(genres);
         mPresenter.loadMovies();
-        Mockito.verify(api, Mockito.never()).genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE);
+        Mockito.verify(api, Mockito.never()).getGenres();
     }
 }
