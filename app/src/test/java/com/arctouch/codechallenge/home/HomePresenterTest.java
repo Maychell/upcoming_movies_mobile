@@ -1,7 +1,9 @@
 package com.arctouch.codechallenge.home;
 
 import com.arctouch.codechallenge.api.TmdbApi;
+import com.arctouch.codechallenge.data.Cache;
 import com.arctouch.codechallenge.helper.RxSchedulersOverrideRule;
+import com.arctouch.codechallenge.model.Genre;
 import com.arctouch.codechallenge.model.Movie;
 import com.arctouch.codechallenge.model.UpcomingMoviesResponse;
 
@@ -35,6 +37,12 @@ public class HomePresenterTest {
     @Before
     public void setUp() {
         mPresenter = new HomePresenter(mView, api);
+        Mockito.when(api.genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE)).thenReturn(Observable.never());
+        Mockito.when(api.upcomingMovies(Matchers.eq(TmdbApi.API_KEY), Matchers.eq(TmdbApi.DEFAULT_LANGUAGE), Matchers.anyLong(), Matchers.eq(TmdbApi.DEFAULT_REGION)))
+                .thenReturn(Observable.never());
+        List<Genre> genres = new ArrayList<>();
+        genres.add(new Genre());
+        Cache.setGenres(genres);
     }
 
     @Test
@@ -45,8 +53,6 @@ public class HomePresenterTest {
         Mockito.when(api.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, 1L, TmdbApi.DEFAULT_REGION))
                 .thenReturn(Observable.just(response));
         mPresenter.loadMovies();
-        Mockito.verify(mView, Mockito.times(1)).setProgressVisibile(true);
-        Mockito.verify(mView, Mockito.times(1)).setProgressVisibile(false);
         Mockito.verify(mView, Mockito.times(1)).feedMovies(mMovies);
     }
 
@@ -60,8 +66,6 @@ public class HomePresenterTest {
                 .thenReturn(Observable.just(response));
         mPresenter.loadMovies();
         mPresenter.loadMovies();
-        Mockito.verify(mView, Mockito.times(1)).setProgressVisibile(true);
-        Mockito.verify(mView, Mockito.times(1)).setProgressVisibile(false);
         Mockito.verify(mView, Mockito.times(1)).feedMovies(mMovies);
     }
 
@@ -76,8 +80,22 @@ public class HomePresenterTest {
         mPresenter.loadMovies();
         mPresenter.loadMovies();
         mPresenter.loadMovies();
-        Mockito.verify(mView, Mockito.times(3)).setProgressVisibile(true);
-        Mockito.verify(mView, Mockito.times(3)).setProgressVisibile(false);
         Mockito.verify(mView, Mockito.times(3)).feedMovies(mMovies);
+    }
+
+    @Test
+    public void whenCachedGenresIsEmpty() {
+        Cache.setGenres(new ArrayList<>());
+        mPresenter.loadMovies();
+        Mockito.verify(api, Mockito.times(1)).genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE);
+    }
+
+    @Test
+    public void whenCachedGenresIsNotEmpty() {
+        List<Genre> genres = new ArrayList<>();
+        genres.add(new Genre());
+        Cache.setGenres(genres);
+        mPresenter.loadMovies();
+        Mockito.verify(api, Mockito.never()).genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE);
     }
 }

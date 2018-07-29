@@ -50,12 +50,10 @@ public class HomePresenter {
             fetchMovies();
             return;
         }
+        mView.setProgressVisibile(true);
         mApi.genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE)
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext((__) -> mView.setProgressVisibile(true))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnEach((__) -> mView.setProgressVisibile(false))
                 .subscribe(response -> {
                     Cache.setGenres(response.genres);
                     mView.setProgressVisibile(false);
@@ -64,12 +62,10 @@ public class HomePresenter {
     }
 
     private void fetchMovies() {
+        mView.setProgressVisibile(true);
         mApi.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, ++currentPage, TmdbApi.DEFAULT_REGION)
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext((__) -> mView.setProgressVisibile(true))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnEach((__) -> mView.setProgressVisibile(false))
                 .subscribe(response -> {
                     for (Movie movie : response.results) {
                         movie.genres = new ArrayList<>();
@@ -80,6 +76,7 @@ public class HomePresenter {
                         }
                     }
                     totalPages = response.totalPages;
+                    mView.setProgressVisibile(false);
                     mView.feedMovies(response.results);
                 });
     }
