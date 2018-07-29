@@ -2,50 +2,108 @@ package com.arctouch.codechallenge.home;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.ProgressBar;
 
 import com.arctouch.codechallenge.R;
-import com.arctouch.codechallenge.api.TmdbApi;
-import com.arctouch.codechallenge.base.BaseActivity;
-import com.arctouch.codechallenge.data.Cache;
-import com.arctouch.codechallenge.model.Genre;
+import com.arctouch.codechallenge.home.dagger.ContextModule;
+import com.arctouch.codechallenge.home.dagger.DaggerHomeComponent;
+import com.arctouch.codechallenge.home.dagger.HomeModule;
 import com.arctouch.codechallenge.model.Movie;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
+import javax.inject.Inject;
 
-public class HomeActivity extends BaseActivity {
+public class HomeActivity extends AppCompatActivity implements HomeCallback {
+
+    public static final String MOVIE_EXTRA_TAG = "MovieTag";
+    private static final String MOVIE_LIST_STATE = "movieListState";
+    private static final String CURRENT_PAGE_STATE = "CurrentPageState";
+    private static final String TOTAL_PAGES_STATE = "TotalPagesState";
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
+    @Inject HomePresenter mPresenter;
+    @Inject HomeAdapter mAdapter;
+    @Inject LinearLayoutManager mLayoutManager;
+    private Boolean isScrolling = false;
+    private List<Movie> mMovies = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_activity);
+        DaggerHomeComponent.builder()
+                .contextModule(new ContextModule(this))
+                .homeModule(new HomeModule(this, mMovies))
+                .build()
+                .inject(this);
 
-        this.recyclerView = findViewById(R.id.recyclerView);
-        this.progressBar = findViewById(R.id.progressBar);
+        recyclerView = findViewById(R.id.recyclerView);
+        progressBar = findViewById(R.id.progressBar);
+        setUpRecycler();
 
-        api.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, 1L, TmdbApi.DEFAULT_REGION)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(response -> {
-                    for (Movie movie : response.results) {
-                        movie.genres = new ArrayList<>();
-                        for (Genre genre : Cache.getGenres()) {
-                            if (movie.genreIds.contains(genre.id)) {
-                                movie.genres.add(genre);
-                            }
-                        }
-                    }
+        if (savedInstanceState != null) {
+            feedMovies((List<Movie>) savedInstanceState.getSerializable(MOVIE_LIST_STATE));
+            mPresenter.setCurrentPage(savedInstanceState.getLong(CURRENT_PAGE_STATE));
+            mPresenter.setTotalPages(savedInstanceState.getInt(TOTAL_PAGES_STATE));
+        } else {
+            mPresenter.loadMovies();
+        }
+    }
 
-                    recyclerView.setAdapter(new HomeAdapter(response.results));
-                    progressBar.setVisibility(View.GONE);
-                });
+    @Override
+    public void onSaveInstanceState(Bundle state) {
+        super.onSaveInstanceState(state);
+        state.putSerializable(MOVIE_LIST_STATE, new ArrayList<> (mMovies));
+        state.putLong(CURRENT_PAGE_STATE, mPresenter.getCurrentPage());
+        state.putInt(TOTAL_PAGES_STATE, mPresenter.getTotalPages());
+    }
+
+    @Override
+    public void feedMovies(List<Movie> movies) {
+        mMovies.addAll(movies);
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void setProgressVisibile(boolean visibility) {
+        progressBar.setVisibility(visibility ? View.VISIBLE : View.GONE);
+    }
+
+    private void setUpRecycler() {
+        recyclerView.setAdapter(mAdapter);
+        recyclerView.setLayoutManager(mLayoutManager);
+        setScrollListener();
+    }
+
+    private void setScrollListener() {
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                isScrolling = (newState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL);
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int currentItemsCount = mLayoutManager.getChildCount();
+                int totalItems = mLayoutManager.getItemCount();
+                int scrollOutItems = mLayoutManager.findFirstVisibleItemPosition();
+
+                if (isScrolling && (currentItemsCount + scrollOutItems == totalItems)) {
+                    isScrolling = false;
+                    mPresenter.loadMovies();
+                }
+            }
+        });
     }
 }

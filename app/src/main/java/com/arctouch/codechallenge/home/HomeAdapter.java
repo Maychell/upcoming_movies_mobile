@@ -19,10 +19,16 @@ import java.util.List;
 
 public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
-    private List<Movie> movies;
+    public interface OnMovieClickListener {
+        void onMovieClick(Movie movie);
+    }
 
-    public HomeAdapter(List<Movie> movies) {
+    private List<Movie> movies;
+    private OnMovieClickListener movieClickListener;
+
+    public HomeAdapter(List<Movie> movies, OnMovieClickListener movieClickListener) {
         this.movies = movies;
+        this.movieClickListener = movieClickListener;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -42,18 +48,20 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
             posterImageView = itemView.findViewById(R.id.posterImageView);
         }
 
-        public void bind(Movie movie) {
+        public void bind(Movie movie, final OnMovieClickListener movieClickListener) {
             titleTextView.setText(movie.title);
             genresTextView.setText(TextUtils.join(", ", movie.genres));
             releaseDateTextView.setText(movie.releaseDate);
 
             String posterPath = movie.posterPath;
-            if (TextUtils.isEmpty(posterPath) == false) {
+            if (!TextUtils.isEmpty(posterPath)) {
                 Glide.with(itemView)
                         .load(movieImageUrlBuilder.buildPosterUrl(posterPath))
                         .apply(new RequestOptions().placeholder(R.drawable.ic_image_placeholder))
                         .into(posterImageView);
             }
+
+            itemView.setOnClickListener((__) -> movieClickListener.onMovieClick(movie));
         }
     }
 
@@ -71,6 +79,6 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(movies.get(position));
+        holder.bind(movies.get(position), movieClickListener);
     }
 }

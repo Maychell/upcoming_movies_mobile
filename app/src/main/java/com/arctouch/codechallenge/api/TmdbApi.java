@@ -1,5 +1,6 @@
 package com.arctouch.codechallenge.api;
 
+import com.arctouch.codechallenge.app.Constants;
 import com.arctouch.codechallenge.model.GenreResponse;
 import com.arctouch.codechallenge.model.Movie;
 import com.arctouch.codechallenge.model.UpcomingMoviesResponse;
@@ -10,30 +11,12 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface TmdbApi {
+    @GET(Constants.MovieService.GENRE_LIST)
+    Observable<GenreResponse> getGenres();
 
-    String URL = "https://api.themoviedb.org/3/";
-    String API_KEY = "1f54bd990f1cdfb230adb312546d765d";
-    String DEFAULT_LANGUAGE = "pt-BR";
-    String DEFAULT_REGION = "BR";
+    @GET(Constants.MovieService.UPCOMING_MOVIES)
+    Observable<UpcomingMoviesResponse> getUpcomingMovies(@Query("page") Long page);
 
-    @GET("genre/movie/list")
-    Observable<GenreResponse> genres(
-            @Query("api_key") String apiKey,
-            @Query("language") String language
-    );
-
-    @GET("movie/upcoming")
-    Observable<UpcomingMoviesResponse> upcomingMovies(
-            @Query("api_key") String apiKey,
-            @Query("language") String language,
-            @Query("page") Long page,
-            @Query("region") String region
-    );
-
-    @GET("movie/{id}")
-    Observable<Movie> movie(
-            @Path("id") Long id,
-            @Query("api_key") String apiKey,
-            @Query("language") String language
-    );
+    @GET(Constants.MovieService.GET_MOVIE)
+    Observable<Movie> getMovies(@Path("id") Long id);
 }
