@@ -29,16 +29,31 @@ public class HomePresenter {
         loadGenres();
     }
 
+    public long getCurrentPage() {
+        return currentPage;
+    }
+
+    public void setCurrentPage(long currentPage) {
+        this.currentPage = currentPage;
+    }
+
+    public int getTotalPages() {
+        return totalPages;
+    }
+
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
+    }
+
     private void loadGenres() {
         if (!Cache.getGenres().isEmpty()) {
             fetchMovies();
             return;
         }
+        mView.setProgressVisibile(true);
         mApi.genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE)
-                .doOnNext((__) -> mView.setProgressVisibile(true))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnEach((__) -> mView.setProgressVisibile(false))
                 .subscribe(response -> {
                     Cache.setGenres(response.genres);
                     mView.setProgressVisibile(false);
@@ -47,12 +62,10 @@ public class HomePresenter {
     }
 
     private void fetchMovies() {
+        mView.setProgressVisibile(true);
         mApi.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, ++currentPage, TmdbApi.DEFAULT_REGION)
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext((__) -> mView.setProgressVisibile(true))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnEach((__) -> mView.setProgressVisibile(false))
                 .subscribe(response -> {
                     for (Movie movie : response.results) {
                         movie.genres = new ArrayList<>();
@@ -63,6 +76,7 @@ public class HomePresenter {
                         }
                     }
                     totalPages = response.totalPages;
+                    mView.setProgressVisibile(false);
                     mView.feedMovies(response.results);
                 });
     }

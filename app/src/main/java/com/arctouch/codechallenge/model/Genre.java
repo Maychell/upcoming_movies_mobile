@@ -8,6 +8,8 @@ public class Genre implements Parcelable {
     public int id;
     public String name;
 
+    public Genre() {  }
+
     private Genre(Parcel parcel) {
         id = parcel.readInt();
         name = parcel.readString();
