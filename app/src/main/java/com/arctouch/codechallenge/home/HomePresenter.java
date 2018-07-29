@@ -29,12 +29,29 @@ public class HomePresenter {
         loadGenres();
     }
 
+    public long getCurrentPage() {
+        return currentPage;
+    }
+
+    public void setCurrentPage(long currentPage) {
+        this.currentPage = currentPage;
+    }
+
+    public int getTotalPages() {
+        return totalPages;
+    }
+
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
+    }
+
     private void loadGenres() {
         if (!Cache.getGenres().isEmpty()) {
             fetchMovies();
             return;
         }
         mApi.genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE)
+                .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext((__) -> mView.setProgressVisibile(true))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

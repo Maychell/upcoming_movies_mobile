@@ -24,6 +24,8 @@ public class HomeActivity extends AppCompatActivity implements HomeCallback {
 
     public static final String MOVIE_EXTRA_TAG = "MovieTag";
     private static final String MOVIE_LIST_STATE = "movieListState";
+    private static final String CURRENT_PAGE_STATE = "CurrentPageState";
+    private static final String TOTAL_PAGES_STATE = "TotalPagesState";
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -46,12 +48,12 @@ public class HomeActivity extends AppCompatActivity implements HomeCallback {
 
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
-        recyclerView.setAdapter(mAdapter);
-        recyclerView.setLayoutManager(mLayoutManager);
-        setScrollListener();
+        setUpRecycler();
 
         if (savedInstanceState != null) {
             feedMovies((List<Movie>) savedInstanceState.getSerializable(MOVIE_LIST_STATE));
+            mPresenter.setCurrentPage(savedInstanceState.getLong(CURRENT_PAGE_STATE));
+            mPresenter.setTotalPages(savedInstanceState.getInt(TOTAL_PAGES_STATE));
         } else {
             mPresenter.loadMovies();
         }
@@ -61,6 +63,25 @@ public class HomeActivity extends AppCompatActivity implements HomeCallback {
     public void onSaveInstanceState(Bundle state) {
         super.onSaveInstanceState(state);
         state.putSerializable(MOVIE_LIST_STATE, new ArrayList<> (mMovies));
+        state.putLong(CURRENT_PAGE_STATE, mPresenter.getCurrentPage());
+        state.putInt(TOTAL_PAGES_STATE, mPresenter.getTotalPages());
+    }
+
+    @Override
+    public void feedMovies(List<Movie> movies) {
+        mMovies.addAll(movies);
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void setProgressVisibile(boolean visibility) {
+        progressBar.setVisibility(visibility ? View.VISIBLE : View.GONE);
+    }
+
+    private void setUpRecycler() {
+        recyclerView.setAdapter(mAdapter);
+        recyclerView.setLayoutManager(mLayoutManager);
+        setScrollListener();
     }
 
     private void setScrollListener() {
@@ -84,16 +105,5 @@ public class HomeActivity extends AppCompatActivity implements HomeCallback {
                 }
             }
         });
-    }
-
-    @Override
-    public void feedMovies(List<Movie> movies) {
-        mMovies.addAll(movies);
-        mAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void setProgressVisibile(boolean visibility) {
-        progressBar.setVisibility(visibility ? View.VISIBLE : View.GONE);
     }
 }
