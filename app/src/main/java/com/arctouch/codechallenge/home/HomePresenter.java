@@ -51,7 +51,7 @@ public class HomePresenter {
             return;
         }
         mView.setProgressVisibile(true);
-        mApi.genres(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE)
+        mApi.getGenres()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(response -> {
@@ -63,7 +63,7 @@ public class HomePresenter {
 
     private void fetchMovies() {
         mView.setProgressVisibile(true);
-        mApi.upcomingMovies(TmdbApi.API_KEY, TmdbApi.DEFAULT_LANGUAGE, ++currentPage, TmdbApi.DEFAULT_REGION)
+        mApi.getUpcomingMovies(++currentPage)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(response -> {

@@ -1,6 +1,7 @@
 package com.arctouch.codechallenge.home.dagger;
 
 import com.arctouch.codechallenge.api.TmdbApi;
+import com.arctouch.codechallenge.app.Constants;
 
 import dagger.Module;
 import dagger.Provides;
@@ -26,7 +27,7 @@ public class TmdbService {
     @HomeScope
     Retrofit retrofit(OkHttpClient okHttpClient) {
         return new Retrofit.Builder()
-                .baseUrl(TmdbApi.URL)
+                .baseUrl(Constants.URL)
                 .client(okHttpClient)
                 .addConverterFactory(MoshiConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
